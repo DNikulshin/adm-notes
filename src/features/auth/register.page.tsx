@@ -18,7 +18,7 @@ import { ROUTES } from '@/shared/model/routes'
 
 const formSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(5),
 })
 
 function RegisterPage() {
@@ -35,12 +35,15 @@ function RegisterPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      // Register the user
       await UsersService.usersControllerRegister(values)
-      const response = await AuthService.authControllerLogin(values)
-      login(response.accessToken)
+      // Login the user after registration
+      const token = await AuthService.authControllerLogin(values)
+      login(token)
       navigate('/')
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
+      // Handle error appropriately in UI
     }
   }
 

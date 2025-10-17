@@ -15,6 +15,7 @@ import { AuthService } from '@/shared/api/generated'
 import { useSession } from '@/shared/model/session'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/shared/model/routes'
+import { useState } from 'react'
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -24,6 +25,7 @@ const formSchema = z.object({
 function LoginPage() {
   const login = useSession((state) => state.login)
   const navigate = useNavigate()
+  const [error, setError] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,11 +37,56 @@ function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setError(null)
       const response = await AuthService.authControllerLogin(values)
-      login(response.accessToken)
+
+      // Extract token from response - might be in different formats
+      let token: string
+      if (typeof response === 'string') {
+        token = response
+      } else if (
+        response &&
+        typeof response === 'object' &&
+        'access_token' in response
+      ) {
+        token = response.access_token
+      } else if (
+        response &&
+        typeof response === 'object' &&
+        'token' in response
+      ) {
+        token = response.token
+      } else if (
+        response &&
+        typeof response === 'object' &&
+        'accessToken' in response
+      ) {
+        token = response.accessToken
+      } else {
+        // Try to convert to string as a fallback
+        token = String(response)
+      }
+
+      // Validate that we have a proper token before proceeding
+      if (!token || token === '[object Object]') {
+        throw new Error('Invalid token received from server')
+      }
+
+      login(token)
       navigate('/')
-    } catch (error) {
-      console.error(error)
+    } catch (error: any) {
+      console.error('Login error:', error)
+      if (error.message?.includes('ERR_CONNECTION_REFUSED')) {
+        setError(
+          'Cannot connect to the server. Please make sure the backend API is running.'
+        )
+      } else if (error.status === 401) {
+        setError('Invalid email or password.')
+      } else {
+        setError(
+          error.message || 'An unexpected error occurred. Please try again.'
+        )
+      }
     }
   }
 
@@ -73,6 +120,7 @@ function LoginPage() {
               </FormItem>
             )}
           />
+          {error && <div className="text-red-500 text-sm">{error}</div>}
           <Button type="submit">Submit</Button>
         </form>
       </Form>

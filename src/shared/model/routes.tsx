@@ -9,7 +9,7 @@ export const ROUTES = {
 } as const
 
 export type PathParams = {
-  [ROUTES.NOTES]: {
+  [ROUTES.NOTE]: {
     noteId: string
   }
 }

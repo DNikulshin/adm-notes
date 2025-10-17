@@ -33,7 +33,8 @@ export class DefaultService {
             body: requestBody,
             mediaType: 'application/json',
             errors: {
-                401: `Unauthorized.`,
+                400: `Bad Request - Validation failed`,
+                401: `Unauthorized - No valid access token provided`,
             },
         });
     }
@@ -47,13 +48,13 @@ export class DefaultService {
             method: 'GET',
             url: '/todos',
             errors: {
-                401: `Unauthorized.`,
+                401: `Unauthorized - No valid access token provided`,
             },
         });
     }
     /**
      * Find a single todo by its ID. Users can only access their own todos. Admins can access any todo.
-     * @param id
+     * @param id Todo ID
      * @returns any Return a single todo.
      * @throws ApiError
      */
@@ -67,14 +68,15 @@ export class DefaultService {
                 'id': id,
             },
             errors: {
-                401: `Unauthorized.`,
-                404: `Todo not found.`,
+                401: `Unauthorized - No valid access token provided`,
+                403: `Forbidden - User does not own this todo`,
+                404: `Not Found - Todo with specified ID does not exist`,
             },
         });
     }
     /**
      * Update a todo. Users can only update their own todos.
-     * @param id
+     * @param id Todo ID
      * @param requestBody
      * @returns any The todo has been successfully updated.
      * @throws ApiError
@@ -92,14 +94,16 @@ export class DefaultService {
             body: requestBody,
             mediaType: 'application/json',
             errors: {
-                401: `Unauthorized.`,
-                404: `Todo not found.`,
+                400: `Bad Request - Validation failed`,
+                401: `Unauthorized - No valid access token provided`,
+                403: `Forbidden - User does not own this todo`,
+                404: `Not Found - Todo with specified ID does not exist`,
             },
         });
     }
     /**
      * Delete a todo. Users can only delete their own todos.
-     * @param id
+     * @param id Todo ID
      * @returns any The todo has been successfully deleted.
      * @throws ApiError
      */
@@ -113,8 +117,9 @@ export class DefaultService {
                 'id': id,
             },
             errors: {
-                401: `Unauthorized.`,
-                404: `Todo not found.`,
+                401: `Unauthorized - No valid access token provided`,
+                403: `Forbidden - User does not own this todo`,
+                404: `Not Found - Todo with specified ID does not exist`,
             },
         });
     }
@@ -128,8 +133,8 @@ export class DefaultService {
             method: 'DELETE',
             url: '/todos/admin/delete-all',
             errors: {
-                401: `Unauthorized.`,
-                403: `Forbidden.`,
+                401: `Unauthorized - No valid access token provided`,
+                403: `Forbidden - User is not an admin`,
             },
         });
     }
